@@ -5,11 +5,11 @@ class Candidate:
         self.skills = skills_from_outside
 
 
-    def checck_python_skill(self):
+    def check_python_skill(self):
         print(f"---正在为{self.name}检查技能---")
         found_python = False
         for skill in self.skills:
-            if skill.lower() == "Python":
+            if skill.lower() == "python":
                 found_python = True
                 break
 
@@ -25,8 +25,8 @@ alex_candidate = Candidate("Alex", ["Java", "SQL", "Git"])
 bob_candidate = Candidate("Bob", ["HTML", "python", "Docker"])
 
 print("\n---开始检查技能---")
-alex_has_python = alex_candidate.checck_python_skill()
-bob_has_python = bob_candidate.checck_python_skill()
+alex_has_python = alex_candidate.check_python_skill()
+bob_has_python = bob_candidate.check_python_skill()
 print("\n---打印最终结果---")
 print(f"Alex是否会Python？{alex_has_python}")
 print(f"Bob是否会Python？{bob_has_python}")
