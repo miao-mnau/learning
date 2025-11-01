@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
+from pydantic import BaseModel
 import mysql.connector
 import json
 
 app = FastAPI()
+
+class CandidatesModel(BaseModel):
+    name: str 
+    skills: list
 
 DB_CONFIG = {
     'host': "127.0.0.1",
@@ -52,3 +57,43 @@ def get_all_candidates():
     conn.close()
 
     return candidates_list
+
+@app.post("/candidates", status_code=status.HTTP_201_CREATED)
+def create_candidate(candidate: CandidatesModel):
+    print(f"--- 正在处理 POST / candidates 请求，数据为：{candidate}---")
+
+    conn = get_db_connection()
+    if conn is None:
+        return{"error": "数据库连接失败"}
+    
+    cursor = conn.cursor()
+
+    sql_query = "INSERT INTO candidates (name, skills) VALUES (%s, %s)"
+    skills_json_string = json.dumps(candidate.skills)
+    try:
+        cursor.execute(sql_query, (candidate.name, skills_json_string))
+        
+        # 【极其重要！】
+        # INSERT / UPDATE / DELETE 必须“提交”(Commit)！
+        conn.commit() 
+        
+        # 获取刚创建的 "id"
+        new_id = cursor.lastrowid
+        
+        print(f"--- 成功创建新候选人, ID: {new_id} ---")
+
+    except mysql.connector.Error as err:
+        print(f"!!! 插入数据时出错: {err} !!!")
+        conn.rollback() # 如果出错了，就“回滚”（撤销操作）
+        return {"error": str(err)}
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+    # “上菜”：把新创建的候选人（连同新ID）返回给顾客
+    return {
+        "id": new_id,
+        "name": candidate.name,
+        "skills": candidate.skills
+    }
