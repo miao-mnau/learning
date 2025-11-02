@@ -10,7 +10,7 @@ class CandidatesModel(BaseModel):
     skills: list
 
 DB_CONFIG = {
-    'host': "127.0.0.1",
+    'host': "host.docker.internal",
     'user': "root",
     'password': "123456",
     'database': "ai_intern_db", # <--- 我们刚刚创建的那个数据库
