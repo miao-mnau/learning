@@ -97,3 +97,75 @@ def create_candidate(candidate: CandidatesModel):
         "name": candidate.name,
         "skills": candidate.skills
     }
+
+@app.put("/candidates/{candidate_id}")
+def update_candidate(candidate_id: int, candidate: CandidatesModel):
+    print(f"--- 正在处理 PUT /candidates/{candidate_id} 请求... ---")
+    conn = get_db_connection()
+    if conn is None:
+        return {"error": "数据库连接失败"}
+    cursor = conn.cursor()
+
+    sql_query = """
+        UPDATE candidates
+        SET name = %s, skills = %s
+        WHERE id = %s
+    """
+    skills_json_string = json.dumps(candidate.skills)
+
+    try:
+
+        cursor.execute(sql_query,(candidate.name, skills_json_string, candidate_id))
+
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            print(f"--- 警告：未找到 ID: {candidate_id}，更新失败 ---")
+            return {"error": "Candidate not found"}
+        
+        print(f"--- 成功更新了 ID: {candidate_id} ---")
+
+    except mysql.connector.Error as err:
+        print(f"!!! 更新数据时出错: {err} !!!")
+        conn.rollback()
+        return {"error": str(err)}
+    
+    return {
+        "id": candidate_id,
+        "name": candidate.name,
+        "skills": candidate.skills
+    }
+
+@app.delete("/candidates/{candidate_id}")
+def delete_candidate(candidate_id: int):
+    print(f"--- 正在处理 DELETE /candidates/{candidate_id} 请求... ---")
+
+    conn = get_db_connection()
+    if conn is None:
+        return {"error": "数据库连接失败"}
+    
+    cursor = conn.cursor()
+
+    sql_query = "DELETE FROM candidates WHERE id = %s"
+
+    try:
+        cursor.execute(sql_query, (candidate_id,))
+
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            print(f"--- 警告：未找到 ID: {candidate_id}，删除失败 ---")
+            return {"error": "Candidate not found"}
+        
+        print(f"--- 成功删除了 ID: {candidate_id} ---")
+
+    except mysql.connector.Error as err:
+        print(f"!!! 删除数据时出错: {err} !!!")
+        conn.rollback()
+        return {"error": str(err)}
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {"message": f"Candidate with id {candidate_id} was successfully deleted"}
