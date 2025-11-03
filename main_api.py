@@ -10,11 +10,11 @@ class CandidatesModel(BaseModel):
     skills: list
 
 DB_CONFIG = {
-    'host': "host.docker.internal",
+    'host': "mainline.proxy.rlwy.net",
     'user': "root",
-    'password': "123456",
-    'database': "ai_intern_db", # <--- 我们刚刚创建的那个数据库
-    'port': 3306
+    'password': "jnFKylViDQKwLjALLBIaIdCfxxAHkszD",
+    'database': "railway", # <--- 我们刚刚创建的那个数据库
+    'port': 24162
 }
 
 def get_db_connection():

@@ -1,70 +1,71 @@
 import mysql.connector
 import json
 
+# --- 【“云”配置】---
+# (这些是您从 Railway 拿到的，是正确的！)
 DB_USER = "root"
-DB_PASSWORD = "123456"
-DB_HOST = "127.0.0.1"
-DB_PROT = 3306
+DB_PASSWORD = "jnFky1V1DQKwLjALLBIaIdCfxxAHksZD"
+DB_HOST = "mainline.proxy.rlwy.net"
+DB_PORT = 24162  # <-- 我帮您把变量名从 DB_PROT 改成了 DB_PORT (Port/端口)
+DB_NAME = "railway"
+# ---------------------
 
 try:
-    print(f"---正在连接到MySQL服务器({DB_HOST}:{DB_PROT})...---")
+    # 1. 连接到“云”MySQL 服务器
+    print(f"--- 正在连接到“云”MySQL服务器 ({DB_HOST}:{DB_PORT})... ---")
     mydb = mysql.connector.connect(
-        host = DB_HOST,
-        user = DB_USER,
-        password = DB_PASSWORD,
-        port = DB_PROT
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        port=DB_PORT,
+        database=DB_NAME  # <-- 我们“直接”连接到“railway”数据库
     )
     mycursor = mydb.cursor()
+    print(f"--- 成功连接到“云”数据库 '{DB_NAME}'！ ---")
 
-    DB_NAME = "ai_intern_db"
-    print(f"---正在创建数据库'{DB_NAME}'(如果不存在)...---")
-    mycursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}")
-    mycursor.execute(f"USE {DB_NAME}")
-
-    print("--- 正在创建 'candidates' 表 (如果不存在)... ---")
-
+    # 2. 【“修复”】我们“不”创建数据库了，我们“直接”创建“表”！
+    print(f"--- 正在 '{DB_NAME}' 数据库中创建 'candidates' 表 (如果不存在)... ---")
     mycursor.execute(
         """
         CREATE TABLE IF NOT EXISTS candidates (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255),
-            skills JSON
+            skills JSON 
         )
         """
     )
-
+    
+    # 3. 检查“云”表格是否为空
     mycursor.execute("SELECT COUNT(*) FROM candidates")
     if mycursor.fetchone()[0] == 0:
-        print("---表示空的，正在插入初始数据...---")
-
+        print(f"--- ‘{DB_NAME}’表是空的, 正在插入初始数据... ---")
+        
         sql_query = "INSERT INTO candidates (name, skills) VALUES (%s, %s)"
-
+        
         candidates_list = [
             ("Alex", json.dumps(["Java", "SQL", "Git"])),
             ("Bob", json.dumps(["HTML", "python", "Docker"])),
             ("Charlie", json.dumps(["Python", "Pandas", "AWS"])),
             ("David", json.dumps(["Go", "MySQL"]))
         ]
-
+        
         mycursor.executemany(sql_query, candidates_list)
-        mydb.commit()
-
-        print(f"成功插入了 {mycursor.rowcount}条数据。")
+        mydb.commit() # “提交”到“云”
+        
+        print(f"成功插入了 {mycursor.rowcount} 条数据。")
     else:
-        print("---数据已存在,无需插入。 ---")
-    
-    print(f"\n***数据库 '{DB_NAME}'已准备就绪！ ***")
+        print("--- “云”数据已存在, 无需插入。 ---")
+        
+    print(f"\n*** “云”数据库 '{DB_NAME}' 已准备就绪！***")
 
 except mysql.connector.Error as err:
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print(f"!!! 发生错误: {err}")
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print("\n【帮助】：")
-    print("1. 请确保您的 MySQL 服务器 (比如 XAMPP, WAMP, 或您截图里的 'lol') 正在运行。")
-    print(f"2. 请确保您的用户名 '{DB_USER}' 和密码 '{DB_PASSWORD}' 是正确的。")
-    print(f"3. 请确保您的主机 '{DB_HOST}' 和端口 '{DB_PROT}' 是正确的。")
+    print("\n【帮助】：请确保您的 Railway 数据库正在运行。")
 
 finally:
+    # 4. 关闭“云”连接
     if 'mycursor' in locals():
         mycursor.close()
     if 'mydb' in locals() and mydb.is_connected():
